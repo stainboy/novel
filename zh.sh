@@ -15,22 +15,33 @@ workdir=$bookId
 mkdir -p $workdir/tmp || true
 
 # toc
-if [ ! -f $workdir/toc.json ]; then
-    curl -s "http://m.zongheng.com/h5/ajax/chapter/list?h5=1&bookId=${bookId}&pageNum=1&pageSize=${pageSize}&chapterId=0&asc=0" | jq . > $workdir/toc.json    
-fi
+curl -s "http://m.zongheng.com/h5/ajax/chapter/list?h5=1&bookId=${bookId}&pageNum=1&pageSize=${pageSize}&chapterId=0&asc=0" > $workdir/toc.json
 
 # fetch article
 toc=($(cat $workdir/toc.json | jq '.chapterlist.chapters[] | .chapterId'))
 total="${#toc[@]}"
 current=1
 for cc in "${toc[@]}"; do
-    chapter="$(printf "%04d" $current)__$cc.json"
+    chapter="$(printf "%04d" $current)__${cc}_1.json"
     if [ ! -f $workdir/tmp/$chapter ]; then
-        echo "[${current}/${total}] fetching article..."
+        echo "[${current}/${total} (1/?)] fetching article..."
         curl -s "http://m.zongheng.com/h5/ajax/chapter?bookId=${bookId}&chapterId=${cc}" -H "Cookie: ___bz=${bz}" > $workdir/tmp/$chapter
     else
-        echo "[${current}/${total}] article exists"
+        echo "[${current}/${total} (1/?)] article exists"
     fi
+
+    # paging >_<!
+    pageCount=$(cat $workdir/tmp/$chapter | jq .result.pageCount)
+    for (( i = 2; i < $pageCount+1; i++ )); do
+        chapter_x="$(printf "%04d" $current)__${cc}_$i.json"
+        if [ ! -f $workdir/tmp/$chapter_x ]; then
+            echo "[${current}/${total} ($i/$pageCount)] fetching article..."
+            curl -s "http://m.zongheng.com/h5/ajax/chapter?bookId=${bookId}&chapterId=${cc}_${i}" -H "Cookie: ___bz=${bz}" > $workdir/tmp/$chapter_x
+        else
+            echo "[${current}/${total} ($i/$pageCount)] article exists"
+        fi
+    done
+
     let current=$current+1
 done
 
@@ -38,19 +49,23 @@ done
 # process article
 current=1
 for cc in "${toc[@]}"; do
-    chapter="$(printf "%04d" $current)__$cc.json"
+    chapter="$(printf "%04d" $current)__${cc}_1.json"
     chapter_md="$(printf "%04d" $current)__$cc.md"
-    if [ ! -f $workdir/tmp/$chapter_md ]; then
-        echo "[${current}/${total}] process article..."
-        chapterName=$(cat $workdir/tmp/$chapter | jq -r .result.chapterName)
-        article=$(cat $workdir/tmp/$chapter | jq -r .result.content)
+
+    echo "[${current}/${total}] process article..."
+    chapterName=$(cat $workdir/tmp/$chapter | jq -r .result.chapterName)
+    echo -e "##${chapterName}##\n\n" > $workdir/tmp/$chapter_md
+
+    pageCount=$(cat $workdir/tmp/$chapter | jq .result.pageCount)
+    for (( i = 1; i < $pageCount+1; i++ )); do
+        chapter_x="$(printf "%04d" $current)__${cc}_$i.json"
+        article=$(cat $workdir/tmp/$chapter_x | jq -r .result.content)
         article="${article//<p>/}"
         article="${article//<\/p>/\\n\\n}"
-        echo -e "##${chapterName}##\n\n" > $workdir/tmp/$chapter_md
         echo -e $article >> $workdir/tmp/$chapter_md
-    else
-        echo "[${current}/${total}] article exists"
-    fi
+        echo -e '\n\n' >> $workdir/tmp/$chapter_md
+    done
+
     let current=$current+1
 done
 

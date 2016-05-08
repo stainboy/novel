@@ -23,7 +23,7 @@ total="${#toc[@]}"
 current=1
 for cc in "${toc[@]}"; do
     chapter="$(printf "%04d" $current)__${cc}_1.json"
-    if [ ! -f $workdir/tmp/$chapter ]; then
+    if [ ! -s $workdir/tmp/$chapter ]; then
         echo "[${current}/${total} (1/?)] fetching article..."
         curl -s "http://m.zongheng.com/h5/ajax/chapter?bookId=${bookId}&chapterId=${cc}" -H "Cookie: ___bz=${bz}" > $workdir/tmp/$chapter
     else
@@ -34,7 +34,7 @@ for cc in "${toc[@]}"; do
     pageCount=$(cat $workdir/tmp/$chapter | jq .result.pageCount)
     for (( i = 2; i < $pageCount+1; i++ )); do
         chapter_x="$(printf "%04d" $current)__${cc}_$i.json"
-        if [ ! -f $workdir/tmp/$chapter_x ]; then
+        if [ ! -s $workdir/tmp/$chapter_x ]; then
             echo "[${current}/${total} ($i/$pageCount)] fetching article..."
             curl -s "http://m.zongheng.com/h5/ajax/chapter?bookId=${bookId}&chapterId=${cc}_${i}" -H "Cookie: ___bz=${bz}" > $workdir/tmp/$chapter_x
         else

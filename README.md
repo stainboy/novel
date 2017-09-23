@@ -11,3 +11,11 @@ docker run --rm --name groovy-worker \
 vi zh.sh
 ./zh.sh
 ```
+
+```console
+go get -v github.com/gregjones/httpcache
+# modify github.com/gregjones/httpcache/httpcache.go, make `getFreshness` always returns `fresh`
+go get -v github.com/peterbourgon/diskv
+go build
+./novel 1
+```

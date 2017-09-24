@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -78,6 +79,7 @@ func (c *zhongheng) Process() error {
 		return err
 	}
 
+	log.Println("Bye")
 	return nil
 }
 
@@ -199,7 +201,11 @@ func (c *zhongheng) produceMD() error {
 }
 
 func (c *zhongheng) produceMobi() error {
-	log.Printf("(TODO) Producing mobi file, please wait...")
-	// TODO
-	return nil
+	log.Printf("Producing mobi file, it takes several minutes, please wait...")
+	// https://manual.calibre-ebook.com/generated/en/ebook-convert.html
+	shell := fmt.Sprintf("cd output/%s/;ebook-convert %s.md .mobi --authors '%s' --language zh --level1-toc '//h:h1' --level2-toc '//h:h2'", c.bookId, c.bookTitle, c.author)
+	cmd := exec.Command("bash", "-c", shell)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }

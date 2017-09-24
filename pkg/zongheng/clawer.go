@@ -54,6 +54,7 @@ type zhongheng struct {
 	author    string
 	pageSize  int
 	secret    string
+	offset    int
 	// ##
 	toc toc
 }
@@ -89,6 +90,7 @@ func (c *zhongheng) initEnv() error {
 	c.author = os.Getenv("author")
 	c.pageSize, _ = strconv.Atoi(os.Getenv("pageSize"))
 	c.secret = os.Getenv("bz")
+	c.offset, _ = strconv.Atoi(os.Getenv("offset"))
 	return nil
 }
 
@@ -123,7 +125,16 @@ func (c *zhongheng) fetchChapters() error {
 	if os.Getenv("DEBUG_SIZE") != "" {
 		total, _ = strconv.Atoi(os.Getenv("DEBUG_SIZE"))
 	}
+
+	skipping := c.offset != 0
 	for index, cp := range c.toc.Chapterlist.Chapters {
+		if skipping {
+			if cp.ChapterId != c.offset {
+				continue
+			} else {
+				skipping = false
+			}
+		}
 
 		// if cp.ChapterId != 4396038 {
 		// 	continue
@@ -182,7 +193,16 @@ func (c *zhongheng) produceMD() error {
 	util.AppendFile(bookMD, []byte(title))
 
 	// chapters
+	skipping := c.offset != 0
 	for _, cp := range c.toc.Chapterlist.Chapters {
+		if skipping {
+			if cp.ChapterId != c.offset {
+				continue
+			} else {
+				skipping = false
+			}
+		}
+
 		chapterName := fmt.Sprintf("##%s##\n\n", cp.ChapterName)
 		util.AppendFile(bookMD, []byte(chapterName))
 

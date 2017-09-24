@@ -225,7 +225,7 @@ func (c *zhongheng) produceMD() error {
 func (c *zhongheng) produceMobi() error {
 	log.Printf("Producing mobi file, it takes several minutes, please wait...")
 	// https://manual.calibre-ebook.com/generated/en/ebook-convert.html
-	shell := fmt.Sprintf("cd output/%s/;ebook-convert %s.md .mobi --authors '%s' --language zh --level1-toc '//h:h1' --level2-toc '//h:h2'", c.bookId, c.bookTitle, c.author)
+	shell := fmt.Sprintf("cd output/%s/;ebook-convert %s.md .mobi --title '%s' --rating 5 --authors '%s' --language zh --level1-toc '//h:h1' --level2-toc '//h:h2'", c.bookId, c.bookTitle, c.bookTitle, c.author)
 	cmd := exec.Command("bash", "-c", shell)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

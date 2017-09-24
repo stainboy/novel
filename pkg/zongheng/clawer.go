@@ -191,6 +191,8 @@ func (c *zhongheng) produceMD() error {
 			return err
 		}
 		s := string(c)
+		s = strings.Replace(s, "</p><p>（本章未完，请翻页）</p><p>", "", -1)
+		s = strings.Replace(s, "<p>（本章完）</p>", "", -1)
 		s = strings.Replace(s, "<p>", "", -1)
 		s = strings.Replace(s, "</p>", "\n\n", -1)
 		util.AppendFile(bookMD, []byte(s))

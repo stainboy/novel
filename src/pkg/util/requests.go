@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gregjones/httpcache"
-	"github.com/gregjones/httpcache/diskcache"
+	"../diskcache"
+	"../httpcache"
 )
 
 var cachedClient *http.Client
@@ -21,8 +21,9 @@ func init() {
 	cachedClient = &http.Client{Transport: t}
 }
 
-func GetJSON(url string, v interface{}) error {
+func FetchToc(url string, key string, v interface{}) error {
 	req, err := makeRequest(url, nil, nil)
+	// req.Header.Add(httpcache.XCacheKey, key)
 	if err != nil {
 		return err
 	}

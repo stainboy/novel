@@ -15,7 +15,11 @@ func Source(file string) error {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		kv := strings.SplitN(scanner.Text(), "=", 2)
+		line := scanner.Text()
+		if strings.Index(line, "#") == 0 {
+			continue
+		}
+		kv := strings.SplitN(line, "=", 2)
 		if len(kv) == 2 {
 			os.Setenv(kv[0], kv[1])
 		}
